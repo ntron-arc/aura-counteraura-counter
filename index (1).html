@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AURA Counter — Measure Your Social Energy</title>
+<meta name="description" content="AI-powered AURA score — find out your social energy, confidence and respect level based on your words and behaviors."/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --black: #080808;
+  --deep: #0f0f14;
+  --card: #13131a;
+  --card2: #1a1a24;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --purple: #9b6dff;
+  --purple2: #7c4dff;
+  --purple3: #c4a5ff;
+  --gold: #f0c040;
+  --gold2: #ffd700;
+  --green: #39d98a;
+  --red: #ff5c5c;
+  --amber: #ffaa40;
+  --text: #f0eeff;
+  --text2: #a09ab8;
+  --text3: #5a5470;
+  --glow: 0 0 30px rgba(155,109,255,0.18);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Syne',sans-serif;
+  background:var(--black);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(155,109,255,0.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(155,109,255,0.03) 1px,transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;z-index:0;
+}
+header{
+  position:relative;z-index:10;
+  padding:2rem 1rem 1.5rem;
+  text-align:center;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(155,109,255,0.08) 0%,transparent 100%);
+}
+.logo{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(40px,10vw,72px);
+  letter-spacing:6px;
+  background:linear-gradient(135deg,#c4a5ff 0%,#9b6dff 40%,#f0c040 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  line-height:1;
+}
+.logo-sub{
+  font-size:12px;letter-spacing:4px;
+  color:var(--text3);text-transform:uppercase;
+  margin-top:4px;
+}
+.nav{
+  display:flex;gap:4px;
+  padding:1rem;
+  max-width:680px;margin:0 auto;
+  position:relative;z-index:10;
+}
+.nav-btn{
+  flex:1;padding:10px 4px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  font-family:'Syne',sans-serif;
+  font-size:10px;font-weight:600;
+  letter-spacing:0.5px;
+  text-transform:uppercase;
+  color:var(--text3);
+  cursor:pointer;transition:all 0.2s;
+}
+.nav-btn.active{
+  background:rgba(155,109,255,0.15);
+  border-color:var(--purple);
+  color:var(--purple3);
+}
+.nav-btn:hover:not(.active){color:var(--text2);border-color:var(--border2);}
+.container{
+  max-width:680px;margin:0 auto;
+  padding:0 1rem 4rem;
+  position:relative;z-index:10;
+}
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ORB */
+.orb-section{text-align:center;padding:2rem 0 1.5rem;}
+.orb-wrap{
+  position:relative;
+  width:180px;height:180px;
+  margin:0 auto 1.5rem;
+}
+.orb-ring{
+  position:absolute;inset:-12px;
+  border-radius:50%;
+  border:1px solid rgba(155,109,255,0.2);
+  animation:spin 8s linear infinite;
+}
+.orb-ring2{
+  position:absolute;inset:-24px;
+  border-radius:50%;
+  border:1px dashed rgba(155,109,255,0.1);
+  animation:spin 14s linear infinite reverse;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.orb{
+  width:180px;height:180px;
+  border-radius:50%;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  border:2px solid var(--purple);
+  background:radial-gradient(circle at 40% 35%,rgba(155,109,255,0.25),rgba(155,109,255,0.05) 60%,transparent);
+  box-shadow:0 0 40px rgba(155,109,255,0.2),inset 0 0 40px rgba(155,109,255,0.05);
+  transition:all 0.7s ease;
+  position:relative;z-index:2;
+}
+.orb-score{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:56px;letter-spacing:2px;
+  color:var(--purple3);
+  line-height:1;
+  transition:color 0.6s;
+}
+.orb-label{font-size:11px;color:var(--text3);letter-spacing:2px;margin-top:2px;}
+.orb-interactions{font-size:11px;color:var(--text3);margin-top:4px;}
+.rank-badge{
+  display:inline-block;
+  padding:6px 20px;
+  border-radius:30px;
+  font-size:13px;font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  border:1px solid var(--purple);
+  color:var(--purple3);
+  background:rgba(155,109,255,0.1);
+  transition:all 0.6s;
+  margin-bottom:0.5rem;
+}
+.stats-row{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:8px;margin:1rem 0;
+}
+.stat-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:12px 8px;text-align:center;
+}
+.stat-val{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:28px;letter-spacing:1px;
+  color:var(--purple3);
+}
+.stat-lbl{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+.section-title{
+  font-size:11px;letter-spacing:3px;
+  text-transform:uppercase;color:var(--text3);
+  margin:1.5rem 0 0.75rem;
+  display:flex;align-items:center;gap:8px;
+}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* CHART */
+.chart-wrap{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:1.25rem;
+}
+.chart-title{font-size:12px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:1rem;}
+#auraChart{width:100%;height:160px;display:none;}
+#chartEmpty{text-align:center;color:var(--text3);font-size:13px;font-style:italic;padding:2rem 0;}
+
+/* LOG */
+.log-wrap{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;max-height:220px;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:var(--border2) transparent;
+}
+.log-entry{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  font-size:13px;
+}
+.log-entry:last-child{border-bottom:none;}
+.log-pts{font-family:'Bebas Neue',sans-serif;font-size:16px;min-width:52px;}
+.log-pts.pos{color:var(--green);}
+.log-pts.neg{color:var(--red);}
+.log-text{color:var(--text2);flex:1;}
+.log-empty{padding:1.5rem;text-align:center;color:var(--text3);font-size:13px;font-style:italic;}
+
+/* SHARE */
+.share-wrap{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:1.25rem;text-align:center;
+}
+.share-preview{
+  background:var(--deep);
+  border:1px solid var(--border2);
+  border-radius:10px;padding:1.25rem;
+  margin-bottom:1rem;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:13px;letter-spacing:2px;color:var(--text3);
+}
+.share-score-big{font-size:52px;letter-spacing:3px;color:var(--purple3);display:block;line-height:1;}
+.share-rank-big{font-size:18px;color:var(--text2);margin:4px 0;}
+.share-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.share-btn{
+  padding:9px 16px;border-radius:10px;
+  border:1px solid var(--border2);background:var(--card2);
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:600;
+  color:var(--text2);cursor:pointer;transition:all 0.2s;
+}
+.share-btn:hover{border-color:var(--purple);color:var(--purple3);}
+
+/* CHAT */
+.chat-wrap{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;
+}
+.chat-msgs{
+  height:300px;overflow-y:auto;
+  padding:1rem;display:flex;flex-direction:column;gap:10px;
+  scrollbar-width:thin;scrollbar-color:var(--border2) transparent;
+}
+.msg{
+  padding:10px 14px;border-radius:12px;
+  max-width:85%;font-size:14px;line-height:1.55;
+  animation:fadeUp 0.3s ease;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg.user{background:linear-gradient(135deg,var(--purple2),var(--purple));color:#fff;align-self:flex-end;border-bottom-right-radius:3px;}
+.msg.ai{background:var(--card2);color:var(--text);align-self:flex-start;border:1px solid var(--border2);border-bottom-left-radius:3px;}
+.msg.system{align-self:center;font-size:12px;color:var(--text3);font-style:italic;background:none;padding:4px 0;}
+.aura-badge{display:inline-block;margin-top:6px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:1px;}
+.aura-badge.pos{background:rgba(57,217,138,0.15);color:var(--green);border:1px solid rgba(57,217,138,0.3);}
+.aura-badge.neg{background:rgba(255,92,92,0.15);color:var(--red);border:1px solid rgba(255,92,92,0.3);}
+.chat-bottom{display:flex;gap:8px;padding:10px;border-top:1px solid var(--border);}
+.chat-bottom input{
+  flex:1;padding:10px 14px;
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:10px;font-family:'Syne',sans-serif;
+  font-size:14px;color:var(--text);outline:none;transition:border-color 0.2s;
+}
+.chat-bottom input:focus{border-color:var(--purple);}
+.chat-bottom input::placeholder{color:var(--text3);}
+.send-btn{
+  padding:10px 18px;
+  background:linear-gradient(135deg,var(--purple2),var(--purple));
+  border:none;border-radius:10px;
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:600;
+  color:#fff;cursor:pointer;transition:opacity 0.2s,transform 0.1s;
+}
+.send-btn:hover{opacity:0.88;}
+.send-btn:active{transform:scale(0.97);}
+.send-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.typing{display:flex;align-items:center;gap:5px;padding:4px 2px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--purple);animation:bounce 1.1s infinite;}
+.dot:nth-child(2){animation-delay:.18s}
+.dot:nth-child(3){animation-delay:.36s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-7px)}}
+
+/* BEHAVIORS */
+.b-list{display:flex;flex-direction:column;gap:8px;}
+.b-item{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:12px 14px;
+  display:flex;align-items:center;gap:12px;transition:border-color 0.2s;
+}
+.b-item:hover{border-color:var(--border2);}
+.b-emoji{font-size:22px;width:32px;text-align:center;flex-shrink:0;}
+.b-info{flex:1;min-width:0;}
+.b-name{font-size:13px;font-weight:600;color:var(--text);}
+.b-desc{font-size:11px;color:var(--text3);margin-top:2px;}
+.b-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.b-pts{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;min-width:48px;text-align:center;}
+.b-pts.pos{color:var(--green);}
+.b-pts.neg{color:var(--red);}
+.b-controls{display:flex;align-items:center;gap:6px;}
+.b-cnt{font-size:13px;font-weight:700;min-width:20px;text-align:center;color:var(--purple3);}
+.b-btn{
+  width:28px;height:28px;border-radius:8px;
+  border:1px solid var(--border2);background:var(--card2);
+  color:var(--text2);font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all 0.15s;
+}
+.b-btn.pos:hover{background:rgba(57,217,138,0.15);border-color:var(--green);color:var(--green);}
+.b-btn.neg:hover{background:rgba(255,92,92,0.15);border-color:var(--red);color:var(--red);}
+
+/* TIPS */
+.tips-grid{display:flex;flex-direction:column;gap:10px;}
+.tip-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;
+  display:flex;gap:14px;align-items:flex-start;transition:border-color 0.2s;
+}
+.tip-card:hover{border-color:rgba(155,109,255,0.3);}
+.tip-emoji{font-size:24px;flex-shrink:0;margin-top:2px;}
+.tip-title{font-size:14px;font-weight:700;color:var(--purple3);margin-bottom:4px;}
+.tip-desc{font-size:13px;color:var(--text2);line-height:1.55;}
+.tip-pts{
+  font-size:11px;font-weight:700;color:var(--green);letter-spacing:1px;
+  margin-top:6px;display:inline-block;
+  padding:2px 8px;background:rgba(57,217,138,0.1);
+  border-radius:20px;border:1px solid rgba(57,217,138,0.2);
+}
+
+/* CHALLENGE */
+.challenge-card{
+  background:linear-gradient(135deg,rgba(155,109,255,0.12),rgba(240,192,64,0.06));
+  border:1px solid rgba(155,109,255,0.3);
+  border-radius:14px;padding:1.5rem;text-align:center;margin-bottom:1rem;
+}
+.challenge-day{font-size:11px;letter-spacing:3px;color:var(--purple3);text-transform:uppercase;margin-bottom:6px;}
+.challenge-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--text);margin-bottom:8px;}
+.challenge-desc{font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:1rem;}
+.challenge-reward{
+  display:inline-block;padding:6px 16px;border-radius:20px;
+  font-size:12px;font-weight:700;letter-spacing:1px;
+  background:rgba(240,192,64,0.15);color:var(--gold);border:1px solid rgba(240,192,64,0.3);
+}
+.challenge-btn{
+  display:block;width:100%;margin-top:1rem;padding:12px;
+  background:linear-gradient(135deg,var(--purple2),var(--purple));
+  border:none;border-radius:10px;font-family:'Syne',sans-serif;
+  font-size:14px;font-weight:700;color:#fff;cursor:pointer;
+  letter-spacing:1px;transition:opacity 0.2s;
+}
+.challenge-btn:hover{opacity:0.88;}
+.challenge-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.challenge-done{
+  background:rgba(57,217,138,0.15);border:1px solid rgba(57,217,138,0.3);
+  border-radius:10px;padding:12px;text-align:center;
+  color:var(--green);font-weight:700;font-size:14px;margin-top:1rem;
+}
+
+/* LEADERBOARD */
+.lb-wrap{display:flex;flex-direction:column;gap:8px;}
+.lb-item{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:12px 16px;
+  display:flex;align-items:center;gap:14px;
+}
+.lb-item.you{border-color:var(--purple);background:rgba(155,109,255,0.08);}
+.lb-rank{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;width:32px;text-align:center;color:var(--text3);}
+.lb-rank.gold{color:var(--gold);}
+.lb-rank.silver{color:#c0c0c0;}
+.lb-rank.bronze{color:#cd7f32;}
+.lb-avatar{
+  width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;background:rgba(155,109,255,0.15);
+  border:1px solid var(--border2);flex-shrink:0;
+}
+.lb-info{flex:1;}
+.lb-name{font-size:14px;font-weight:600;}
+.lb-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+.lb-score{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--purple3);letter-spacing:1px;}
+
+/* AD */
+.ad-slot{
+  background:var(--card);border:1px dashed var(--border2);
+  border-radius:10px;padding:1.25rem;
+  text-align:center;color:var(--text3);font-size:12px;letter-spacing:1px;margin:1rem 0;
+}
+
+footer{
+  text-align:center;padding:1.5rem 1rem;
+  border-top:1px solid var(--border);
+  font-size:12px;color:var(--text3);letter-spacing:1px;
+  position:relative;z-index:10;
+}
+footer a{color:var(--text3);text-decoration:none;}
+footer a:hover{color:var(--purple3);}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+@media(max-width:420px){.b-desc{display:none;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">AURA</div>
+  <div class="logo-sub">Social Energy Counter</div>
+</header>
+
+<div style="max-width:680px;margin:0 auto;padding:0 1rem;position:relative;z-index:10;">
+  <div class="ad-slot">Advertisement — Google AdSense will appear here</div>
+  <nav class="nav" style="padding:0;margin-bottom:1rem;">
+    <button class="nav-btn active" onclick="switchTab('aura')">Aura</button>
+    <button class="nav-btn" onclick="switchTab('chat')">Talk</button>
+    <button class="nav-btn" onclick="switchTab('behaviors')">Behaviors</button>
+    <button class="nav-btn" onclick="switchTab('improve')">Improve</button>
+    <button class="nav-btn" onclick="switchTab('challenge')">Challenge</button>
+    <button class="nav-btn" onclick="switchTab('leaderboard')">Ranks</button>
+  </nav>
+</div>
+
+<div class="container">
+
+  <!-- AURA TAB -->
+  <div class="panel active" id="panel-aura">
+    <div class="orb-section">
+      <div class="orb-wrap">
+        <div class="orb-ring"></div>
+        <div class="orb-ring2"></div>
+        <div class="orb" id="orb">
+          <div class="orb-score" id="scoreDisplay">+0</div>
+          <div class="orb-label">AURA SCORE</div>
+          <div class="orb-interactions" id="interCount">0 interactions</div>
+        </div>
+      </div>
+      <div class="rank-badge" id="rankBadge">Neutral Energy</div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val" id="statPos">0</div><div class="stat-lbl">Gained</div></div>
+      <div class="stat-card"><div class="stat-val" id="statNeg" style="color:var(--red)">0</div><div class="stat-lbl">Lost</div></div>
+      <div class="stat-card"><div class="stat-val" id="statPeak">0</div><div class="stat-lbl">Peak</div></div>
+    </div>
+    <div class="section-title">Aura History</div>
+    <div class="chart-wrap">
+      <div class="chart-title">Score Over Time</div>
+      <canvas id="auraChart"></canvas>
+      <div id="chartEmpty">Chat or log behaviors to see your history</div>
+    </div>
+    <div class="section-title">Recent Activity</div>
+    <div class="log-wrap" id="logList"><div class="log-empty">No activity yet — start talking or log behaviors!</div></div>
+    <div style="margin-top:1rem;">
+      <div class="share-wrap">
+        <div class="share-preview">
+          <span class="share-score-big" id="shareScore">+0</span>
+          <div class="share-rank-big" id="shareRank">Neutral Energy</div>
+          <div>auracounter.netlify.app</div>
+        </div>
+        <div class="share-btns">
+          <button class="share-btn" onclick="copyScore()">Copy Score Card</button>
+          <button class="share-btn" onclick="shareTwitter()">Share on X</button>
+          <button class="share-btn" onclick="shareWhatsApp()">WhatsApp</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT TAB -->
+  <div class="panel" id="panel-chat">
+    <div class="section-title">Talk to AURA AI</div>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:1rem;line-height:1.6;">Say anything — AURA AI will judge your confidence, kindness, wit, and energy. Every message changes your score.</p>
+    <div class="chat-wrap">
+      <div class="chat-msgs" id="chatMsgs">
+        <div class="msg system">AURA is watching... say something and get judged.</div>
+      </div>
+      <div class="chat-bottom">
+        <input type="text" id="chatInput" placeholder="Say something to AURA..." onkeydown="if(event.key==='Enter')sendChat()"/>
+        <button class="send-btn" id="sendBtn" onclick="sendChat()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BEHAVIORS TAB -->
+  <div class="panel" id="panel-behaviors">
+    <div class="section-title">Positive Behaviors</div>
+    <div class="b-list" id="bPos"></div>
+    <div class="section-title">Negative Behaviors</div>
+    <div class="b-list" id="bNeg"></div>
+  </div>
+
+  <!-- IMPROVE TAB -->
+  <div class="panel" id="panel-improve">
+    <div class="section-title">How to Increase Your AURA</div>
+    <div class="tips-grid" id="tipsList"></div>
+  </div>
+
+  <!-- CHALLENGE TAB -->
+  <div class="panel" id="panel-challenge">
+    <div class="section-title">Daily AURA Challenge</div>
+    <div class="challenge-card">
+      <div class="challenge-day">Today's Challenge</div>
+      <div class="challenge-title" id="challengeTitle">Loading...</div>
+      <div class="challenge-desc" id="challengeDesc"></div>
+      <div class="challenge-reward" id="challengeReward">+500 AURA</div>
+      <button class="challenge-btn" id="challengeBtn" onclick="completeChallenge()">Mark as Complete</button>
+    </div>
+    <div class="tip-card">
+      <div class="tip-emoji">🎯</div>
+      <div>
+        <div class="tip-title">Why Daily Challenges Matter</div>
+        <div class="tip-desc">Each challenge pushes you to do something that genuinely improves how people perceive and respect you in real life. Consistency builds legendary aura.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD TAB -->
+  <div class="panel" id="panel-leaderboard">
+    <div class="section-title">Global AURA Ranks</div>
+    <div class="lb-wrap" id="lbList"></div>
+    <div style="margin-top:1rem;background:var(--card);border:1px solid rgba(155,109,255,0.3);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px;">
+      <div class="lb-rank" style="color:var(--purple3);font-family:'Bebas Neue',sans-serif;font-size:18px;">YOU</div>
+      <div class="lb-avatar">👤</div>
+      <div class="lb-info"><div class="lb-name">Your Score</div><div class="lb-sub" id="yourRankSub">Keep going to climb the ranks</div></div>
+      <div class="lb-score" id="yourLbScore">+0</div>
+    </div>
+  </div>
+
+  <div class="ad-slot">Advertisement — Google AdSense will appear here</div>
+</div>
+
+<footer>&copy; 2025 AURA Counter &nbsp;·&nbsp; Powered by AI &nbsp;·&nbsp; <a href="#">Privacy Policy</a></footer>
+
+<script>
+const API_KEY = 'YOUR_API_KEY_HERE';
+let auraScore=0,totalPos=0,totalNeg=0,peakScore=0,chatCount=0,challengeDone=false;
+let behaviorCounts={},conversationHistory=[],logEntries=[],scoreHistory=[0];
+
+const posBehaviors=[
+  {id:'compliment',name:'Gave a genuine compliment',desc:'Uplifted someone sincerely',pts:150,emoji:'💬'},
+  {id:'helped',name:'Helped without being asked',desc:'Spontaneous act of support',pts:200,emoji:'🤝'},
+  {id:'confident',name:'Walked in with confidence',desc:'Entered with presence and posture',pts:100,emoji:'🚶'},
+  {id:'promise',name:'Kept a promise',desc:'Did exactly what you said',pts:180,emoji:'✅'},
+  {id:'honest',name:'Was radically honest',desc:'Spoke truth even when hard',pts:160,emoji:'👁️'},
+  {id:'listen',name:'Actively listened',desc:'Full attention, no distractions',pts:120,emoji:'👂'},
+  {id:'apology',name:'Gave a genuine apology',desc:'Owned your mistake fully',pts:130,emoji:'🙏'},
+  {id:'punctual',name:'Was on time',desc:'Respected others\' schedules',pts:90,emoji:'⏰'},
+];
+const negBehaviors=[
+  {id:'phone',name:'Ignored someone for phone',desc:'Distracted during a convo',pts:-120,emoji:'📱'},
+  {id:'interrupt',name:'Interrupted mid-sentence',desc:'Spoke over someone',pts:-100,emoji:'🛑'},
+  {id:'gossip',name:'Spread gossip',desc:'Talked behind someone\'s back',pts:-200,emoji:'🗣️'},
+  {id:'late',name:'Showed up late unannounced',desc:'Wasted others\' time',pts:-130,emoji:'⌛'},
+  {id:'excuse',name:'Made excuses instead of owning',desc:'Deflected blame to others',pts:-110,emoji:'🙈'},
+  {id:'broke',name:'Broke a promise',desc:'Said one thing, did another',pts:-220,emoji:'💔'},
+];
+const tips=[
+  {emoji:'🧠',title:'Speak with intention',desc:'Every word either builds or destroys your image. Pause before speaking, choose words that add value, and never fill silence with meaningless noise.',pts:'+50 to +200 per interaction'},
+  {emoji:'👀',title:'Hold eye contact',desc:'Confident eye contact signals you are present and secure. People with high aura never look away first during a serious conversation.',pts:'+100 per interaction'},
+  {emoji:'🚶',title:'Improve your walk',desc:'Slow down. Shoulders back. Head up. The way you enter a room determines how people feel about you before you even speak.',pts:'+100 per visit'},
+  {emoji:'📵',title:'Put your phone away',desc:'Being present is increasingly rare. When you give undivided attention, you automatically stand out and earn deep respect.',pts:'+120 per interaction'},
+  {emoji:'🤐',title:'Speak less, say more',desc:'High aura people are selective. When you do speak, people listen because your words carry weight.',pts:'+80 per conversation'},
+  {emoji:'💪',title:'Keep your word always',desc:'Your word is your reputation. If you say you will do something, do it. Reliability is rare and incredibly powerful.',pts:'+180 per kept promise'},
+  {emoji:'🎯',title:'Have a clear goal',desc:'People with direction radiate purpose. When you know what you want and are actively working toward it, others feel your energy.',pts:'+300 daily bonus'},
+  {emoji:'😌',title:'Control your reactions',desc:'Nothing drains aura faster than overreacting. The person who stays calm under pressure is always the most powerful in the room.',pts:'+150 per conflict stayed calm'},
+];
+const challenges=[
+  {title:'The Silence Master',desc:'Go 2 hours without complaining about anything. If someone asks how you are, say great and mean it.',reward:'+500 AURA'},
+  {title:'The Eye Contact King',desc:'Maintain steady eye contact with every person you speak to today. Do not look away first in any conversation.',reward:'+450 AURA'},
+  {title:'5 Real Compliments',desc:'Give 5 genuine, specific compliments to 5 different people today — not generic ones, something real and meaningful.',reward:'+600 AURA'},
+  {title:'Phone Blackout',desc:'Put your phone face-down during every conversation today. No checking, no glancing — full presence only.',reward:'+400 AURA'},
+  {title:'The Promise Keeper',desc:'Make one promise today — even something small — and keep it perfectly. Prove your word means something.',reward:'+550 AURA'},
+  {title:'Walk Like You Own It',desc:'For every walk you take today, slow your pace by 20% and keep shoulders back. Own every room you enter.',reward:'+350 AURA'},
+  {title:'The Hard Truth',desc:'Tell someone a truth today that you have been avoiding. Be kind but be completely honest.',reward:'+700 AURA'},
+];
+const leaderboard=[
+  {rank:1,name:'SigmaKing_X',sub:'Legendary Aura',score:'+4820',emoji:'👑'},
+  {rank:2,name:'VibeQueen',sub:'High Aura',score:'+3910',emoji:'💜'},
+  {rank:3,name:'CalmBoss',sub:'High Aura',score:'+3550',emoji:'🔥'},
+  {rank:4,name:'HonestAlex',sub:'Positive Aura',score:'+2100',emoji:'✅'},
+  {rank:5,name:'RisingStar',sub:'Positive Aura',score:'+1750',emoji:'⭐'},
+];
+
+function buildBehaviors(){
+  document.getElementById('bPos').innerHTML=posBehaviors.map(b=>bHTML(b)).join('');
+  document.getElementById('bNeg').innerHTML=negBehaviors.map(b=>bHTML(b)).join('');
+  [...posBehaviors,...negBehaviors].forEach(b=>behaviorCounts[b.id]=0);
+}
+function bHTML(b){
+  return`<div class="b-item">
+    <div class="b-emoji">${b.emoji}</div>
+    <div class="b-info"><div class="b-name">${b.name}</div><div class="b-desc">${b.desc}</div></div>
+    <div class="b-right">
+      <div class="b-pts ${b.pts>=0?'pos':'neg'}">${b.pts>=0?'+':''}${b.pts}</div>
+      <div class="b-controls">
+        <button class="b-btn neg" onclick="logB('${b.id}',-1)">−</button>
+        <div class="b-cnt" id="cnt-${b.id}">0</div>
+        <button class="b-btn pos" onclick="logB('${b.id}',1)">+</button>
+      </div>
+    </div>
+  </div>`;
+}
+function buildTips(){
+  document.getElementById('tipsList').innerHTML=tips.map(t=>`
+    <div class="tip-card">
+      <div class="tip-emoji">${t.emoji}</div>
+      <div><div class="tip-title">${t.title}</div><div class="tip-desc">${t.desc}</div><span class="tip-pts">${t.pts}</span></div>
+    </div>`).join('');
+}
+function buildChallenge(){
+  const c=challenges[new Date().getDay()%challenges.length];
+  document.getElementById('challengeTitle').textContent=c.title;
+  document.getElementById('challengeDesc').textContent=c.desc;
+  document.getElementById('challengeReward').textContent=c.reward;
+}
+function buildLeaderboard(){
+  document.getElementById('lbList').innerHTML=leaderboard.map(p=>`
+    <div class="lb-item">
+      <div class="lb-rank ${p.rank===1?'gold':p.rank===2?'silver':p.rank===3?'bronze':''}">#${p.rank}</div>
+      <div class="lb-avatar">${p.emoji}</div>
+      <div class="lb-info"><div class="lb-name">${p.name}</div><div class="lb-sub">${p.sub}</div></div>
+      <div class="lb-score">${p.score}</div>
+    </div>`).join('');
+}
+function getStyle(s){
+  if(s>=800)return{bg:'radial-gradient(circle at 40% 35%,rgba(124,77,255,0.4),rgba(124,77,255,0.08))',border:'#9b6dff',sc:'#c4a5ff',rank:'Legendary Aura',rb:'rgba(155,109,255,0.15)',rbc:'#9b6dff',rc:'#c4a5ff'};
+  if(s>=400)return{bg:'radial-gradient(circle at 40% 35%,rgba(24,95,165,0.4),rgba(24,95,165,0.08))',border:'#378ADD',sc:'#9dc8f5',rank:'High Aura',rb:'rgba(55,138,221,0.1)',rbc:'#378ADD',rc:'#9dc8f5'};
+  if(s>=100)return{bg:'radial-gradient(circle at 40% 35%,rgba(39,80,10,0.4),rgba(39,80,10,0.08))',border:'#639922',sc:'#8dcf3a',rank:'Positive Aura',rb:'rgba(57,217,138,0.1)',rbc:'#39d98a',rc:'#39d98a'};
+  if(s>=-100)return{bg:'radial-gradient(circle at 40% 35%,rgba(95,94,90,0.3),rgba(95,94,90,0.05))',border:'#888780',sc:'#c4c3be',rank:'Neutral Energy',rb:'rgba(136,135,128,0.1)',rbc:'#888780',rc:'#c4c3be'};
+  if(s>=-400)return{bg:'radial-gradient(circle at 40% 35%,rgba(133,79,11,0.4),rgba(133,79,11,0.08))',border:'#EF9F27',sc:'#f5c06a',rank:'Low Aura',rb:'rgba(255,170,64,0.1)',rbc:'#ffaa40',rc:'#ffaa40'};
+  return{bg:'radial-gradient(circle at 40% 35%,rgba(121,31,31,0.4),rgba(121,31,31,0.08))',border:'#E24B4A',sc:'#f58585',rank:'Aura Drain',rb:'rgba(255,92,92,0.1)',rbc:'#ff5c5c',rc:'#ff5c5c'};
+}
+function updateDisplay(){
+  const s=getStyle(auraScore);
+  const orb=document.getElementById('orb');
+  orb.style.background=s.bg;
+  orb.style.borderColor=s.border;
+  orb.style.boxShadow=`0 0 40px ${s.border}55,inset 0 0 30px ${s.border}11`;
+  document.getElementById('scoreDisplay').style.color=s.sc;
+  document.getElementById('scoreDisplay').textContent=(auraScore>=0?'+':'')+auraScore;
+  document.getElementById('interCount').textContent=chatCount+' interaction'+(chatCount!==1?'s':'');
+  const rb=document.getElementById('rankBadge');
+  rb.textContent=s.rank;rb.style.background=s.rb;rb.style.borderColor=s.rbc;rb.style.color=s.rc;
+  document.getElementById('statPos').textContent='+'+totalPos;
+  document.getElementById('statNeg').textContent='-'+totalNeg;
+  document.getElementById('statPeak').textContent='+'+peakScore;
+  document.getElementById('shareScore').textContent=(auraScore>=0?'+':'')+auraScore;
+  document.getElementById('shareRank').textContent=s.rank;
+  document.getElementById('yourLbScore').textContent=(auraScore>=0?'+':'')+auraScore;
+  document.getElementById('yourRankSub').textContent=s.rank;
+  drawChart();
+}
+function addScore(delta,reason){
+  auraScore+=delta;
+  if(delta>0)totalPos+=delta;else totalNeg+=Math.abs(delta);
+  if(auraScore>peakScore)peakScore=auraScore;
+  scoreHistory.push(auraScore);
+  if(scoreHistory.length>20)scoreHistory.shift();
+  const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  logEntries.unshift({label:reason,pts:delta,time:t});
+  if(logEntries.length>40)logEntries.pop();
+  renderLog();updateDisplay();
+}
+function renderLog(){
+  const list=document.getElementById('logList');
+  if(!logEntries.length){list.innerHTML='<div class="log-empty">No activity yet!</div>';return;}
+  list.innerHTML=logEntries.map(e=>`
+    <div class="log-entry">
+      <span class="log-pts ${e.pts>=0?'pos':'neg'}">${e.pts>=0?'+':''}${e.pts}</span>
+      <span class="log-text">${e.label}</span>
+      <span style="font-size:11px;color:var(--text3);flex-shrink:0">${e.time}</span>
+    </div>`).join('');
+}
+function drawChart(){
+  const canvas=document.getElementById('auraChart');
+  const empty=document.getElementById('chartEmpty');
+  if(scoreHistory.length<=1){canvas.style.display='none';empty.style.display='block';return;}
+  canvas.style.display='block';empty.style.display='none';
+  const ctx=canvas.getContext('2d');
+  const W=canvas.offsetWidth||600,H=140;
+  canvas.width=W;canvas.height=H;
+  ctx.clearRect(0,0,W,H);
+  const min=Math.min(...scoreHistory),max=Math.max(...scoreHistory,1);
+  const range=max-min||1,pad=16;
+  const pts=scoreHistory.map((v,i)=>({x:pad+(i/(scoreHistory.length-1||1))*(W-pad*2),y:H-pad-((v-min)/range)*(H-pad*2)}));
+  const grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'rgba(155,109,255,0.25)');grad.addColorStop(1,'rgba(155,109,255,0)');
+  ctx.beginPath();ctx.moveTo(pts[0].x,H);
+  pts.forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.lineTo(pts[pts.length-1].x,H);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+  ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+  ctx.strokeStyle='#9b6dff';ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();
+  pts.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fillStyle='#c4a5ff';ctx.fill();});
+}
+function logB(id,dir){
+  const b=[...posBehaviors,...negBehaviors].find(x=>x.id===id);
+  behaviorCounts[id]=Math.max(0,behaviorCounts[id]+dir);
+  document.getElementById('cnt-'+id).textContent=behaviorCounts[id];
+  addScore(b.pts*dir,(dir>0?'Did: ':'Undid: ')+b.name);
+}
+async function sendChat(){
+  const input=document.getElementById('chatInput');
+  const btn=document.getElementById('sendBtn');
+  const text=input.value.trim();
+  if(!text)return;
+  input.value='';btn.disabled=true;
+  addMsg('user',text);
+  conversationHistory.push({role:'user',content:text});
+  addTyping();
+  const sys=`You are AURA — an AI that scores people's social energy. Judge based on confidence, wit, kindness, self-awareness, positivity, honesty. Deduct for rudeness, arrogance, cringe, negativity. Respond ONLY as valid JSON with no markdown or extra text: {"reply":"<casual Gen Z style, 1-2 sentences, witty and direct>","delta":<integer -300 to +300>,"reason":"<3-5 word phrase>"}`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,system:sys,messages:conversationHistory})
+    });
+    const data=await res.json();
+    const raw=data.content?.map(c=>c.text||'').join('');
+    const parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    document.getElementById('typing')?.remove();
+    addMsg('ai',parsed.reply,Math.round(parsed.delta));
+    conversationHistory.push({role:'assistant',content:parsed.reply});
+    chatCount++;
+    addScore(Math.round(parsed.delta),'Chat: '+parsed.reason);
+  }catch(e){
+    document.getElementById('typing')?.remove();
+    addMsg('system','AURA is resting... try again in a moment.');
+  }
+  btn.disabled=false;
+}
+function addMsg(role,text,badge){
+  const box=document.getElementById('chatMsgs');
+  const d=document.createElement('div');
+  d.className='msg '+role;d.textContent=text;
+  if(badge!==undefined){
+    const b=document.createElement('div');
+    b.className='aura-badge '+(badge>=0?'pos':'neg');
+    b.textContent=(badge>=0?'+':'')+badge+' aura';
+    d.appendChild(b);
+  }
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
+}
+function addTyping(){
+  const box=document.getElementById('chatMsgs');
+  const d=document.createElement('div');
+  d.className='msg ai';d.id='typing';
+  d.innerHTML='<div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
+}
+function completeChallenge(){
+  if(challengeDone)return;
+  challengeDone=true;
+  const c=challenges[new Date().getDay()%challenges.length];
+  const pts=parseInt(c.reward.replace(/\D/g,''))||500;
+  addScore(pts,'Daily challenge: '+c.title);
+  const btn=document.getElementById('challengeBtn');
+  btn.disabled=true;
+  btn.insertAdjacentHTML('afterend',`<div class="challenge-done">Challenge Complete! ${c.reward} added to your AURA!</div>`);
+}
+function copyScore(){
+  const s=getStyle(auraScore);
+  navigator.clipboard.writeText(`My AURA Score: ${auraScore>=0?'+':''}${auraScore}\nRank: ${s.rank}\nCheck yours: auracounter.netlify.app`).then(()=>alert('Copied to clipboard!'));
+}
+function shareTwitter(){
+  const s=getStyle(auraScore);
+  window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(`My AURA score is ${auraScore>=0?'+':''}${auraScore} — ${s.rank}! What's yours? #AURACounter auracounter.netlify.app`),'_blank');
+}
+function shareWhatsApp(){
+  const s=getStyle(auraScore);
+  window.open('https://wa.me/?text='+encodeURIComponent(`My AURA score is ${auraScore>=0?'+':''}${auraScore} — ${s.rank}! Check yours at auracounter.netlify.app`),'_blank');
+}
+function switchTab(t){
+  const tabs=['aura','chat','behaviors','improve','challenge','leaderboard'];
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+t).classList.add('active');
+  document.querySelectorAll('.nav-btn')[tabs.indexOf(t)].classList.add('active');
+  if(t==='aura')setTimeout(drawChart,50);
+}
+buildBehaviors();buildTips();buildChallenge();buildLeaderboard();updateDisplay();
+window.addEventListener('resize',()=>{if(document.getElementById('panel-aura').classList.contains('active'))drawChart();});
+</script>
+</body>
+</html>
