@@ -695,21 +695,24 @@ async function sendChat(){
   if(!text)return;
   input.value='';btn.disabled=true;
   addMsg('user',text);
-  conversationHistory.push({role:'user',content:text});
+  conversationHistory.push({role:'user',parts:[{text}]});
   addTyping();
   const sys=`You are AURA — an AI that scores people's social energy. Judge based on confidence, wit, kindness, self-awareness, positivity, honesty. Deduct for rudeness, arrogance, cringe, negativity. Respond ONLY as valid JSON with no markdown or extra text: {"reply":"<casual Gen Z style, 1-2 sentences, witty and direct>","delta":<integer -300 to +300>,"reason":"<3-5 word phrase>"}`;
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,system:sys,messages:conversationHistory})
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        system_instruction:{parts:[{text:sys}]},
+        contents:conversationHistory
+      })
     });
     const data=await res.json();
-    const raw=data.content?.map(c=>c.text||'').join('');
+    const raw=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
     const parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
     document.getElementById('typing')?.remove();
     addMsg('ai',parsed.reply,Math.round(parsed.delta));
-    conversationHistory.push({role:'assistant',content:parsed.reply});
+    conversationHistory.push({role:'model',parts:[{text:parsed.reply}]});
     chatCount++;
     addScore(Math.round(parsed.delta),'Chat: '+parsed.reason);
   }catch(e){
